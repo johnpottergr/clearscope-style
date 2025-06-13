@@ -69,14 +69,17 @@ def summarize_with_gpt(text):
 # Run analysis
 if keyword:
     with st.spinner("Generating content brief..."):
-        st.info(f"Analyzing up to {num_results} top results for '{keyword}'...")
+        st.info(f"Analyzing the top {num_results} search results for '{keyword}'...")
         urls = get_serp_results(keyword, num_results)
         full_summary = ""
         for url in urls:
+            if "wikipedia.org" in url:
+                st.write(f"⚠️ Skipping Wikipedia link: {url}")
+                continue
             st.write(f"🔗 Analyzing: {url}")
             content = get_article_text(url)
             if content:
                 summary = summarize_with_gpt(content)
                 full_summary += f"\n\n### {url}\n{summary}\n"
-                time.sleep(5)  # Option B: delay even on success to ease rate limits
+                time.sleep(2)  # Slow down to respect rate limits
         st.markdown(full_summary)
