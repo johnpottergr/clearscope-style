@@ -83,3 +83,11 @@ if keyword:
                 full_summary += f"\n\n### {url}\n{summary}\n"
                 time.sleep(2)  # Delay to respect rate limits
         st.markdown(full_summary)
+
+st.success("✅ Finished summarizing!")
+
+if content:
+    summary = summarize_with_gpt(content)
+    full_summary += f"\n\n### {url}\n{summary}\n"
+    st.markdown(f"✅ Done: {url}")
+    time.sleep(2)
