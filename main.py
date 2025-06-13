@@ -5,7 +5,7 @@ import requests
 from newspaper import Article
 
 # Load API keys
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 DATAFORSEO_LOGIN = os.getenv("DATAFORSEO_LOGIN")
 DATAFORSEO_PASSWORD = os.getenv("DATAFORSEO_PASSWORD")
 
@@ -53,7 +53,7 @@ def get_article_text(url):
 # Summarize with GPT
 def summarize_with_gpt(text):
     prompt = f"Summarize the key points and topics from the following article:\n\n{text[:4000]}"
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.4
@@ -72,6 +72,3 @@ if keyword:
                 summary = summarize_with_gpt(content)
                 full_summary += f"\n\n### {url}\n{summary}\n"
         st.markdown(full_summary)
-
-
-
