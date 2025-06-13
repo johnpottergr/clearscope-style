@@ -4,6 +4,8 @@ import time
 from openai import OpenAI, RateLimitError
 import requests
 from newspaper import Article
+from docx import Document
+from io import BytesIO
 
 # Load API keys
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -67,21 +69,45 @@ def summarize_with_gpt(text):
     return "⚠️ OpenAI rate limit exceeded after multiple retries."
 
 # Run analysis
+def generate_docx(summaries):
+    doc = Document()
+    doc.add_heading("AI-Powered Content Brief", 0)
+    for summary in summaries:
+        url, content = summary
+        doc.add_heading(url, level=2)
+        doc.add_paragraph(content)
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+    return buffer
+    
 if keyword:
     with st.spinner("Generating content brief..."):
         st.info(f"Analyzing the top {num_results} search results for '{keyword}'...")
         urls = get_serp_results(keyword, num_results)
-        full_summary = ""
+        summaries = []
+
         for url in urls:
             if "wikipedia.org" in url:
                 st.write(f"⚠️ Skipping Wikipedia link: {url}")
-                continue  # skip downloading and summarizing
+                continue
+
             st.write(f"🔗 Analyzing: {url}")
             content = get_article_text(url)
             if content:
                 summary = summarize_with_gpt(content)
-                st.markdown(f"### {url}\n\n{summary}")
-                st.markdown(f"✅ Done: {url}")
-                time.sleep(2)  # Delay to respect rate limits
-        st.markdown(full_summary)
+                summaries.append((url, summary))
+                with st.expander(f"✅ Done: {url}", expanded=False):
+                    st.write(summary)
+                time.sleep(2)
         st.success("✅ Finished summarizing!")
+
+        if summaries:
+            docx_file = generate_docx(summaries)
+            st.download_button(
+                label="📥 Download all summaries (.docx)",
+                data=docx_file,
+                file_name="content_brief.docx",
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
+
