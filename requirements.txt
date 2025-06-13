@@ -4,4 +4,5 @@ newspaper3k
 python-docx
 beautifulsoup4
 lxml_html_clean
+google-generativeai
 google-search-results
