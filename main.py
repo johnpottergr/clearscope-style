@@ -1,27 +1,30 @@
 import streamlit as st
 import os
 import time
-from openai import OpenAI, RateLimitError
 import requests
 from newspaper import Article
 from docx import Document
 from io import BytesIO
+import google.generativeai as genai
 
-# Load API keys
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-DATAFORSEO_LOGIN = os.getenv("DATAFORSEO_LOGIN")
-DATAFORSEO_PASSWORD = os.getenv("DATAFORSEO_PASSWORD")
+# Set Gemini API key
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel("gemini-pro")
 
 st.title("AI-Powered Content Brief Generator")
 st.markdown("""
 - 🔍 Scrapes top-performing content for your keyword  
-- ✍️ Summarizes the main themes using GPT  
+- ✍️ Summarizes the main themes using Gemini 1.5  
 - 📋 Helps you plan your own content briefs fast  
 """)
 
 # User input
 keyword = st.text_input("Enter a keyword:")
 num_results = 5
+
+# DataForSEO credentials
+DATAFORSEO_LOGIN = os.getenv("DATAFORSEO_LOGIN")
+DATAFORSEO_PASSWORD = os.getenv("DATAFORSEO_PASSWORD")
 
 # Fetch SERP results from DataForSEO
 def get_serp_results(keyword, num_results):
@@ -53,22 +56,16 @@ def get_article_text(url):
     except:
         return ""
 
-# Summarize with GPT (with retry logic)
-def summarize_with_gpt(text):
+# Summarize with Gemini
+def summarize_with_gemini(text):
     prompt = f"Summarize the key points and topics from the following article:\n\n{text[:3000]}"
-    for attempt in range(3):
-        try:
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.4
-            )
-            return response.choices[0].message.content.strip()
-        except RateLimitError:
-            time.sleep(30)
-    return "⚠️ OpenAI rate limit exceeded after multiple retries."
+    try:
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    except Exception as e:
+        return f"⚠️ Gemini error: {e}"
 
-# Generate docx
+# Generate .docx file
 def generate_docx(summaries):
     doc = Document()
     doc.add_heading("AI-Powered Content Brief", 0)
@@ -80,7 +77,7 @@ def generate_docx(summaries):
     buffer.seek(0)
     return buffer
 
-# Main logic
+# Run main logic
 if keyword:
     with st.spinner("Generating content brief..."):
         st.info(f"Analyzing the top {num_results} search results for '{keyword}'...")
@@ -89,22 +86,16 @@ if keyword:
 
         for url in urls:
             if "wikipedia.org" in url:
-                st.warning(f"⚠️ Skipping Wikipedia link: {url}")
+                st.write(f"⚠️ Skipping Wikipedia link: {url}")
                 continue
 
             st.write(f"🔗 Analyzing: {url}")
             content = get_article_text(url)
             if content:
-                summary = summarize_with_gpt(content)
+                summary = summarize_with_gemini(content)
                 summaries.append((url, summary))
-
-                # Show inside an open expander
                 with st.expander(f"✅ Done: {url}", expanded=True):
                     st.write(summary)
-
-                # Also render plainly
-                st.markdown(f"### {url}\n{summary}")
-
                 time.sleep(2)
 
         st.success("✅ Finished summarizing!")
