@@ -9,7 +9,7 @@ import google.generativeai as genai
 
 # Set Gemini API key and model
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-pro")
+model = genai.GenerativeModel("models/gemini-1.5-pro-latest")
 
 st.title("AI-Powered Content Brief Generator")
 st.markdown("""
