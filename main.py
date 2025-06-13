@@ -36,7 +36,7 @@ def get_serp_results(keyword, num_results):
 
     try:
         items = data["tasks"][0]["result"][0]["items"]
-        return [item["url"] for item in items if "url" in item]
+        return [item["url"] for item in items if "url" in item][:num_results]  # Enforce limit
     except Exception as e:
         st.error(f"Error parsing SERP results: {e}")
         return []
