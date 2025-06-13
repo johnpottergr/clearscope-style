@@ -1,4 +1,3 @@
-openai>=1.0.0
 streamlit
 newspaper3k
 python-docx
