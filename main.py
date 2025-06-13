@@ -65,22 +65,22 @@ def summarize_with_gpt(text):
             )
             return response.choices[0].message.content.strip()
         except RateLimitError:
-            time.sleep(30)  # Option A: wait longer before retrying
+            time.sleep(30)
     return "⚠️ OpenAI rate limit exceeded after multiple retries."
 
-# Run analysis
+# Generate docx
 def generate_docx(summaries):
     doc = Document()
     doc.add_heading("AI-Powered Content Brief", 0)
-    for summary in summaries:
-        url, content = summary
+    for url, content in summaries:
         doc.add_heading(url, level=2)
         doc.add_paragraph(content)
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
     return buffer
-    
+
+# Main logic
 if keyword:
     with st.spinner("Generating content brief..."):
         st.info(f"Analyzing the top {num_results} search results for '{keyword}'...")
@@ -89,7 +89,7 @@ if keyword:
 
         for url in urls:
             if "wikipedia.org" in url:
-                st.write(f"⚠️ Skipping Wikipedia link: {url}")
+                st.warning(f"⚠️ Skipping Wikipedia link: {url}")
                 continue
 
             st.write(f"🔗 Analyzing: {url}")
@@ -97,9 +97,16 @@ if keyword:
             if content:
                 summary = summarize_with_gpt(content)
                 summaries.append((url, summary))
-                with st.expander(f"✅ Done: {url}", expanded=False):
+
+                # Show inside an open expander
+                with st.expander(f"✅ Done: {url}", expanded=True):
                     st.write(summary)
+
+                # Also render plainly
+                st.markdown(f"### {url}\n{summary}")
+
                 time.sleep(2)
+
         st.success("✅ Finished summarizing!")
 
         if summaries:
@@ -110,4 +117,3 @@ if keyword:
                 file_name="content_brief.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
-
