@@ -1,0 +1,6 @@
+openai
+streamlit
+newspaper3k
+beautifulsoup4
+lxml_html_clean
+google-search-results
