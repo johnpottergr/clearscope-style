@@ -75,11 +75,11 @@ if keyword:
         for url in urls:
             if "wikipedia.org" in url:
                 st.write(f"⚠️ Skipping Wikipedia link: {url}")
-                continue
+                continue  # skip downloading and summarizing
             st.write(f"🔗 Analyzing: {url}")
             content = get_article_text(url)
             if content:
                 summary = summarize_with_gpt(content)
                 full_summary += f"\n\n### {url}\n{summary}\n"
-                time.sleep(2)  # Slow down to respect rate limits
+                time.sleep(2)  # Delay to respect rate limits
         st.markdown(full_summary)
