@@ -36,7 +36,7 @@ def get_serp_results(keyword, num_results):
 
     try:
         items = data["tasks"][0]["result"][0]["items"]
-        return [item["url"] for item in items if "url" in item][:num_results]  # Enforce limit
+        return [item["url"] for item in items if "url" in item][:10]  # Enforce limit
     except Exception as e:
         st.error(f"Error parsing SERP results: {e}")
         return []
@@ -67,6 +67,7 @@ def summarize_with_gpt(text):
 # Run analysis
 if keyword:
     with st.spinner("Generating content brief..."):
+        st.info(f"Analyzing the top {num_results} search results for '{keyword}'...")
         urls = get_serp_results(keyword, num_results)
         full_summary = ""
         for url in urls:
@@ -77,3 +78,6 @@ if keyword:
                 full_summary += f"\n\n### {url}\n{summary}\n"
                 time.sleep(2)  # Slow down to respect rate limits
         st.markdown(full_summary)
+
+
+
