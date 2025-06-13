@@ -1,6 +1,7 @@
 openai>=1.0.0
 streamlit
 newspaper3k
+python-docx
 beautifulsoup4
 lxml_html_clean
 google-search-results
