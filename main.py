@@ -6,7 +6,7 @@ import requests
 from newspaper import Article
 
 # Load API keys
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) 
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 DATAFORSEO_LOGIN = os.getenv("DATAFORSEO_LOGIN")
 DATAFORSEO_PASSWORD = os.getenv("DATAFORSEO_PASSWORD")
 
@@ -36,7 +36,8 @@ def get_serp_results(keyword, num_results):
 
     try:
         items = data["tasks"][0]["result"][0]["items"]
-        return [item["url"] for item in items if "url" in item][:10]  # Enforce limit
+        urls = [item["url"] for item in items if "url" in item]
+        return urls[:10]  # Enforce hard cap of 10 even if more are returned
     except Exception as e:
         st.error(f"Error parsing SERP results: {e}")
         return []
@@ -67,7 +68,7 @@ def summarize_with_gpt(text):
 # Run analysis
 if keyword:
     with st.spinner("Generating content brief..."):
-        st.info(f"Analyzing the top {num_results} search results for '{keyword}'...")
+        st.info(f"Analyzing up to 10 top results for '{keyword}'...")
         urls = get_serp_results(keyword, num_results)
         full_summary = ""
         for url in urls:
@@ -76,8 +77,5 @@ if keyword:
             if content:
                 summary = summarize_with_gpt(content)
                 full_summary += f"\n\n### {url}\n{summary}\n"
-                time.sleep(2)  # Slow down to respect rate limits
+                time.sleep(2)
         st.markdown(full_summary)
-
-
-
