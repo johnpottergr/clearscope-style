@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import time
-from openai import OpenAI
+from openai import OpenAI, RateLimitError
 import requests
 from newspaper import Article
 
@@ -25,7 +25,7 @@ num_results = st.slider("How many results to analyze?", 1, 10, 3)
 def get_serp_results(keyword, num_results):
     endpoint = "https://api.dataforseo.com/v3/serp/google/organic/live/regular"
     payload = {
-        "location_code": 2840,  # US location code
+        "location_code": 2840,
         "language_code": "en",
         "keyword": keyword,
         "limit": num_results
@@ -54,12 +54,15 @@ def get_article_text(url):
 # Summarize with GPT
 def summarize_with_gpt(text):
     prompt = f"Summarize the key points and topics from the following article:\n\n{text[:3000]}"
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.4
-    )
-    return response.choices[0].message.content.strip()
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.4
+        )
+        return response.choices[0].message.content.strip()
+    except RateLimitError:
+        return "⚠️ OpenAI rate limit exceeded. Please wait a moment and try again."
 
 # Run analysis
 if keyword:
@@ -72,5 +75,5 @@ if keyword:
             if content:
                 summary = summarize_with_gpt(content)
                 full_summary += f"\n\n### {url}\n{summary}\n"
-                time.sleep(2)  # Delay to avoid rate limits
+                time.sleep(2)  # Slow down to respect rate limits
         st.markdown(full_summary)
