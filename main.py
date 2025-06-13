@@ -7,10 +7,11 @@ from docx import Document
 from io import BytesIO
 import google.generativeai as genai
 
-# Set Gemini API key
+# Configure Gemini
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel("gemini-pro")
 
+# Title and intro
 st.title("AI-Powered Content Brief Generator")
 st.markdown("""
 - 🔍 Scrapes top-performing content for your keyword  
@@ -20,13 +21,13 @@ st.markdown("""
 
 # User input
 keyword = st.text_input("Enter a keyword:")
-num_results = 5
+num_results = 5  # fixed at 5 to avoid rate issues
 
-# DataForSEO credentials
+# DataForSEO login info
 DATAFORSEO_LOGIN = os.getenv("DATAFORSEO_LOGIN")
 DATAFORSEO_PASSWORD = os.getenv("DATAFORSEO_PASSWORD")
 
-# Fetch SERP results from DataForSEO
+# Get URLs from DataForSEO
 def get_serp_results(keyword, num_results):
     endpoint = "https://api.dataforseo.com/v3/serp/google/organic/live/regular"
     payload = {
@@ -46,7 +47,7 @@ def get_serp_results(keyword, num_results):
         st.error(f"Error parsing SERP results: {e}")
         return []
 
-# Scrape article content
+# Scrape content from page
 def get_article_text(url):
     article = Article(url)
     try:
@@ -56,7 +57,7 @@ def get_article_text(url):
     except:
         return ""
 
-# Summarize with Gemini
+# Generate summary using Gemini
 def summarize_with_gemini(text):
     prompt = f"Summarize the key points and topics from the following article:\n\n{text[:3000]}"
     try:
@@ -65,7 +66,7 @@ def summarize_with_gemini(text):
     except Exception as e:
         return f"⚠️ Gemini error: {e}"
 
-# Generate .docx file
+# Create .docx from list of summaries
 def generate_docx(summaries):
     doc = Document()
     doc.add_heading("AI-Powered Content Brief", 0)
@@ -77,7 +78,7 @@ def generate_docx(summaries):
     buffer.seek(0)
     return buffer
 
-# Run main logic
+# Main run logic
 if keyword:
     with st.spinner("Generating content brief..."):
         st.info(f"Analyzing the top {num_results} search results for '{keyword}'...")
@@ -93,9 +94,11 @@ if keyword:
             content = get_article_text(url)
             if content:
                 summary = summarize_with_gemini(content)
-                summaries.append((url, summary))
-                with st.expander(f"✅ Done: {url}", expanded=True):
-                    st.write(summary)
+                st.write("🧠 Gemini returned:", summary)  # Debug log
+                if summary.strip():
+                    summaries.append((url, summary))
+                    with st.expander(f"✅ Done: {url}", expanded=True):
+                        st.write(summary)
                 time.sleep(2)
 
         st.success("✅ Finished summarizing!")
@@ -108,3 +111,5 @@ if keyword:
                 file_name="content_brief.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             )
+        else:
+            st.warning("No summaries were generated. Check Gemini responses above.")
