@@ -19,7 +19,7 @@ st.markdown("""
 
 # User input
 keyword = st.text_input("Enter a keyword:")
-num_results = st.slider("How many results to analyze?", 1, 10, 3)
+num_results = 5
 
 # Fetch SERP results from DataForSEO
 def get_serp_results(keyword, num_results):
