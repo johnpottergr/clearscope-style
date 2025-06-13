@@ -36,8 +36,7 @@ def get_serp_results(keyword, num_results):
 
     try:
         items = data["tasks"][0]["result"][0]["items"]
-        urls = [item["url"] for item in items if "url" in item]
-        return urls[:10]  # Enforce hard cap of 10 even if more are returned
+        return [item["url"] for item in items if "url" in item][:10]  # Enforce upper cap
     except Exception as e:
         st.error(f"Error parsing SERP results: {e}")
         return []
@@ -52,18 +51,22 @@ def get_article_text(url):
     except:
         return ""
 
-# Summarize with GPT
-def summarize_with_gpt(text):
+# Summarize with GPT + retries
+def summarize_with_gpt(text, retries=3):
     prompt = f"Summarize the key points and topics from the following article:\n\n{text[:3000]}"
-    try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.4
-        )
-        return response.choices[0].message.content.strip()
-    except RateLimitError:
-        return "⚠️ OpenAI rate limit exceeded. Please wait a moment and try again."
+    for attempt in range(retries):
+        try:
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.4
+            )
+            return response.choices[0].message.content.strip()
+        except RateLimitError:
+            if attempt < retries - 1:
+                time.sleep(10)  # Wait 10 seconds before retrying
+            else:
+                return "⚠️ OpenAI rate limit exceeded after multiple retries."
 
 # Run analysis
 if keyword:
