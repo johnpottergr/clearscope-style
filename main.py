@@ -36,7 +36,7 @@ def get_serp_results(keyword, num_results):
 
     try:
         items = data["tasks"][0]["result"][0]["items"]
-        return [item["url"] for item in items if "url" in item][:10]  # Enforce upper cap
+        return [item["url"] for item in items if "url" in item][:num_results]
     except Exception as e:
         st.error(f"Error parsing SERP results: {e}")
         return []
@@ -51,10 +51,10 @@ def get_article_text(url):
     except:
         return ""
 
-# Summarize with GPT + retries
-def summarize_with_gpt(text, retries=3):
+# Summarize with GPT (with retry logic)
+def summarize_with_gpt(text):
     prompt = f"Summarize the key points and topics from the following article:\n\n{text[:3000]}"
-    for attempt in range(retries):
+    for attempt in range(3):
         try:
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
@@ -63,15 +63,13 @@ def summarize_with_gpt(text, retries=3):
             )
             return response.choices[0].message.content.strip()
         except RateLimitError:
-            if attempt < retries - 1:
-                time.sleep(10)  # Wait 10 seconds before retrying
-            else:
-                return "⚠️ OpenAI rate limit exceeded after multiple retries."
+            time.sleep(30)  # Option A: wait longer before retrying
+    return "⚠️ OpenAI rate limit exceeded after multiple retries."
 
 # Run analysis
 if keyword:
     with st.spinner("Generating content brief..."):
-        st.info(f"Analyzing up to 10 top results for '{keyword}'...")
+        st.info(f"Analyzing up to {num_results} top results for '{keyword}'...")
         urls = get_serp_results(keyword, num_results)
         full_summary = ""
         for url in urls:
@@ -80,5 +78,5 @@ if keyword:
             if content:
                 summary = summarize_with_gpt(content)
                 full_summary += f"\n\n### {url}\n{summary}\n"
-                time.sleep(2)
+                time.sleep(5)  # Option B: delay even on success to ease rate limits
         st.markdown(full_summary)
