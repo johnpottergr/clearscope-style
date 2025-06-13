@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import time
 from openai import OpenAI
 import requests
 from newspaper import Article
@@ -52,9 +53,9 @@ def get_article_text(url):
 
 # Summarize with GPT
 def summarize_with_gpt(text):
-    prompt = f"Summarize the key points and topics from the following article:\n\n{text[:4000]}"
+    prompt = f"Summarize the key points and topics from the following article:\n\n{text[:3000]}"
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.4
     )
@@ -71,4 +72,5 @@ if keyword:
             if content:
                 summary = summarize_with_gpt(content)
                 full_summary += f"\n\n### {url}\n{summary}\n"
+                time.sleep(2)  # Delay to avoid rate limits
         st.markdown(full_summary)
