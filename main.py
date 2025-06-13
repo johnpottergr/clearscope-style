@@ -7,6 +7,13 @@ from docx import Document
 from io import BytesIO
 import google.generativeai as genai
 
+def login():
+    password = st.text_input("Enter password to access the app", type="password")
+    if password != st.secrets.APP_PASSWORD:
+        st.stop()
+
+login()  # protect the rest of the app
+
 # Set Gemini API key and model
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel("models/gemini-1.5-pro-latest")
