@@ -10,6 +10,11 @@ DATAFORSEO_LOGIN = os.getenv("DATAFORSEO_LOGIN")
 DATAFORSEO_PASSWORD = os.getenv("DATAFORSEO_PASSWORD")
 
 st.title("AI-Powered Content Brief Generator")
+st.markdown("""
+- 🔍 Scrapes top-performing content for your keyword  
+- ✍️ Summarizes the main themes using GPT  
+- 📋 Helps you plan your own content briefs fast  
+""")
 
 # User input
 keyword = st.text_input("Enter a keyword:")
