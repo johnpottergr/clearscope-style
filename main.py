@@ -16,7 +16,7 @@ login()  # protect the rest of the app
 
 # Set Gemini API key and model
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("models/gemini-1.5-pro-latest")
+model = genai.GenerativeModel("models/gemini-1.5-flash-latest")  # Changed to flash
 
 st.title("AI-Powered Content Brief Generator")
 st.markdown("""
@@ -27,7 +27,7 @@ st.markdown("""
 
 # User input
 keyword = st.text_input("Enter a keyword:")
-num_results = 5
+num_results = 10
 
 # DataForSEO credentials
 DATAFORSEO_LOGIN = os.getenv("DATAFORSEO_LOGIN")
