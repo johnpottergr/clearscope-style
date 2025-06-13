@@ -1,11 +1,11 @@
 import streamlit as st
 import os
-import openai
+from openai import OpenAI
 import requests
 from newspaper import Article
 
 # Load API keys
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) 
 DATAFORSEO_LOGIN = os.getenv("DATAFORSEO_LOGIN")
 DATAFORSEO_PASSWORD = os.getenv("DATAFORSEO_PASSWORD")
 
